@@ -7,7 +7,7 @@ const wm = useWindows()
 <template>
   <div class="desktop" :style="{ background: wm.wallpaper }">
     <Window v-for="w in wm.list" :key="w.id" :win="w">
-      <component :is="APPS[w.appId].component" />
+      <component :is="APPS[w.appId].component" v-bind="APPS[w.appId].props" />
     </Window>
 
     <div class="taskbar">

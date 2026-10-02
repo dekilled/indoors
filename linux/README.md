@@ -14,7 +14,8 @@ Se algo falhar, copie a mensagem de erro: o SELinux Enforcing é o suspeito nº 
 
 ## Ligar tudo (jeito simples)
 
-1. Uma vez só, dentro do Ubuntu: `apt install -y python3 python3-websockets`
+1. Uma vez só, dentro do Ubuntu:
+   `apt install -y python3 python3-websockets tigervnc-standalone-server xterm mousepad fonts-dejavu-core`
 2. Copie o repositório inteiro para o celular (pastas `linux/`, `bridge/` e `web/` juntas).
 3. Como root, dentro da pasta `linux/`:  `sh indoors.sh`
 4. Ele imprime um link `http://127.0.0.1:8080/#token=...` : abra no Chrome do celular.
@@ -22,3 +23,13 @@ Se algo falhar, copie a mensagem de erro: o SELinux Enforcing é o suspeito nº 
 
 A pasta `web/` é o Indoors já compilado (gerada por `npm run build:web`).
 Por padrão tudo escuta só em 127.0.0.1; o token é obrigatório.
+
+## Apps gráficos (Linux GUI dentro do Indoors)
+
+Os ícones 🐧 (xterm) e 📝 (Mousepad) na barra abrem apps X11 do Ubuntu numa janela do Indoors.
+Cada janela = um Xvnc próprio (socket Unix 0600, sem porta TCP) + o app, ligados à bridge.
+Fechou a janela, o app e o display são encerrados.
+
+Para liberar outro app, adicione-o em `GUI_APPS` no `bridge/bridge.py` e em `src/stores/windows.js`.
+O cliente escolhe um NOME da lista; nunca manda comando arbitrário.
+Sem aceleração de GPU (render por software).

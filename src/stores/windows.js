@@ -2,12 +2,16 @@ import { defineStore } from 'pinia'
 import Terminal from '../apps/Terminal.vue'
 import Files from '../apps/Files.vue'
 import Settings from '../apps/Settings.vue'
+import LinuxApp from '../apps/LinuxApp.vue'
 
 // Registro de apps: para criar um app novo, é só adicionar aqui.
 export const APPS = {
   terminal: { title: 'Terminal', icon: '⌨️', component: Terminal },
   files: { title: 'Arquivos', icon: '📁', component: Files },
   settings: { title: 'Configurações', icon: '⚙️', component: Settings },
+  // Apps gráficos do Ubuntu: o nome tem que existir em GUI_APPS na bridge.
+  'linux-xterm': { title: 'xterm (Linux)', icon: '🐧', component: LinuxApp, props: { app: 'xterm' } },
+  'linux-mousepad': { title: 'Mousepad (Linux)', icon: '📝', component: LinuxApp, props: { app: 'mousepad' } },
 }
 
 let nextId = 1

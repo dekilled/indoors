@@ -14,6 +14,7 @@
     "cap:sync": "npm run build && cap sync"
   },
   "dependencies": {
+    "@novnc/novnc": "^1.7.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
     "pinia": "^2.2.0",

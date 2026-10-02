@@ -5,6 +5,10 @@ Protocolo: mensagem binária = bytes de entrada do teclado;
            mensagem texto  = JSON de controle, ex.: {"type":"resize","cols":80,"rows":24}.
 Saída do terminal vai ao cliente como mensagem binária.
 Autenticação: ?token=... na URL (token em ~/.indoors-token ou $INDOORS_TOKEN).
+
+Rotas (mesma porta):
+  /          terminal (PTY + bash)
+  /vnc?app=X app gráfico X (da lista GUI_APPS) num display próprio, via RFB/VNC
 """
 import asyncio
 import fcntl
@@ -29,6 +33,14 @@ WEB_PORT = int(os.environ.get("INDOORS_WEB_PORT", "8080"))
 WEB_DIR = os.environ.get("INDOORS_WEB", os.path.join(os.path.dirname(os.path.abspath(__file__)), "web"))
 TOKEN_FILE = os.path.expanduser("~/.indoors-token")
 
+# Apps gráficos que o Indoors pode abrir. Só o que está aqui roda: o cliente
+# escolhe um NOME, nunca um comando. (Semente do futuro manifesto de permissões.)
+GUI_APPS = {
+    "xterm": ["xterm", "-fa", "Monospace", "-fs", "13"],
+    "mousepad": ["mousepad"],
+}
+_displays_in_use = set()
+
 
 def load_token():
     token = os.environ.get("INDOORS_TOKEN")
@@ -51,14 +63,26 @@ def set_winsize(fd, rows, cols):
     fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
 
 
-async def handler(ws):
+def request_info(ws):
     # websockets <14 expõe ws.path; >=14 expõe ws.request.path
     path = getattr(ws, "path", None) or ws.request.path
-    supplied = parse_qs(urlparse(path).query).get("token", [""])[0]
+    u = urlparse(path)
+    return u.path, parse_qs(u.query)
+
+
+async def handler(ws):
+    route, query = request_info(ws)
+    supplied = query.get("token", [""])[0]
     if not secrets.compare_digest(supplied, TOKEN):
         await ws.close(4401, "unauthorized")
         return
+    if route == "/vnc":
+        await gui_session(ws, query)
+    else:
+        await terminal_session(ws)
 
+
+async def terminal_session(ws):
     pid, fd = pty.fork()
     if pid == 0:
         os.environ.update(TERM="xterm-256color", HOME=os.environ.get("HOME", "/root"))
@@ -114,6 +138,94 @@ async def handler(ws):
         os.close(fd)
 
 
+def clamp(value, lo, hi, default):
+    try:
+        return max(lo, min(hi, int(value)))
+    except (TypeError, ValueError):
+        return default
+
+
+async def stop(proc):
+    if proc and proc.returncode is None:
+        proc.terminate()
+        try:
+            await asyncio.wait_for(proc.wait(), 2)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.wait()
+
+
+async def gui_session(ws, query):
+    """Um app = um Xvnc próprio (socket Unix 0600, sem TCP) + o app, ligados ao WebSocket."""
+    name = query.get("app", [""])[0]
+    cmd = GUI_APPS.get(name)
+    if not cmd:
+        await ws.close(4404, "app não permitido")
+        return
+    width = clamp(query.get("w", [""])[0], 320, 1920, 800)
+    height = clamp(query.get("h", [""])[0], 240, 1200, 500)
+
+    num = next(n for n in range(10, 200) if n not in _displays_in_use)
+    _displays_in_use.add(num)
+    sock = f"/tmp/indoors-vnc-{num}.sock"
+    xvnc = app = writer = None
+    pumps = []
+    try:
+        xvnc = await asyncio.create_subprocess_exec(
+            "Xvnc", f":{num}", "-geometry", f"{width}x{height}", "-depth", "24",
+            "-rfbport", "-1", "-rfbunixpath", sock, "-rfbunixmode", "0600",
+            "-SecurityTypes", "None", "-nolisten", "tcp",
+            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+        for _ in range(50):
+            if os.path.exists(sock) or xvnc.returncode is not None:
+                break
+            await asyncio.sleep(0.1)
+        if not os.path.exists(sock):
+            await ws.close(1011, "Xvnc não iniciou")
+            return
+
+        env = dict(os.environ, DISPLAY=f":{num}", HOME=os.environ.get("HOME", "/root"))
+        app = await asyncio.create_subprocess_exec(
+            *cmd, env=env, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+
+        reader, writer = await asyncio.open_unix_connection(sock)
+
+        async def to_client():
+            while True:
+                data = await reader.read(65536)
+                if not data:
+                    break
+                await ws.send(data)
+            await ws.close(1000, "display encerrado")
+
+        async def to_server():
+            async for msg in ws:
+                if isinstance(msg, bytes):
+                    writer.write(msg)
+                    await writer.drain()
+
+        async def app_exit():
+            await app.wait()
+            await ws.close(1000, "app encerrado")
+
+        pumps = [asyncio.create_task(c()) for c in (to_client, to_server, app_exit)]
+        await asyncio.wait(pumps, return_when=asyncio.FIRST_COMPLETED)
+    except websockets.ConnectionClosed:
+        pass
+    finally:
+        for t in pumps:
+            t.cancel()
+        if writer:
+            writer.close()
+        await stop(app)
+        await stop(xvnc)
+        try:
+            os.unlink(sock)
+        except FileNotFoundError:
+            pass
+        _displays_in_use.discard(num)
+
+
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -132,7 +244,7 @@ def serve_web():
 
 async def main():
     web = serve_web()
-    async with websockets.serve(handler, HOST, PORT):
+    async with websockets.serve(handler, HOST, PORT, subprotocols=["binary"]):
         print(f"[indoors-bridge] terminal em ws://{HOST}:{PORT}")
         if web:
             print("\n>>> Abra este link no navegador do celular:")
