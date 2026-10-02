@@ -1,0 +1,4 @@
+:root { --bg: #111827; --panel: #1f2937; --accent: #8b5cf6; --text: #f3f4f6; }
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; height: 100%; overflow: hidden; }
+body { font-family: system-ui, sans-serif; color: var(--text); background: var(--bg); user-select: none; }
