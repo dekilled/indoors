@@ -6,8 +6,10 @@ import '@xterm/xterm/css/xterm.css'
 
 const KEY = 'indoors.bridge'
 const saved = (() => { try { return JSON.parse(localStorage.getItem(KEY)) } catch { return null } })()
-const host = ref(saved?.host || '127.0.0.1:8765')
-const token = ref(saved?.token || '')
+// Link mágico: http://.../#token=XXXX conecta sozinho, sem digitar nada
+const fromLink = new URLSearchParams(location.hash.slice(1)).get('token')
+const host = ref(fromLink ? `${location.hostname || '127.0.0.1'}:8765` : saved?.host || '127.0.0.1:8765')
+const token = ref(fromLink || saved?.token || '')
 const status = ref('desconectado')
 const el = ref(null)
 

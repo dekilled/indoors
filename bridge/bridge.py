@@ -8,6 +8,8 @@ Autenticação: ?token=... na URL (token em ~/.indoors-token ou $INDOORS_TOKEN).
 """
 import asyncio
 import fcntl
+import functools
+import http.server
 import json
 import os
 import pty
@@ -15,6 +17,7 @@ import secrets
 import signal
 import struct
 import termios
+import threading
 from urllib.parse import parse_qs, urlparse
 
 import websockets
@@ -22,6 +25,8 @@ import websockets
 HOST = os.environ.get("INDOORS_BIND", "127.0.0.1")
 PORT = int(os.environ.get("INDOORS_PORT", "8765"))
 SHELL = os.environ.get("INDOORS_SHELL", "/bin/bash")
+WEB_PORT = int(os.environ.get("INDOORS_WEB_PORT", "8080"))
+WEB_DIR = os.environ.get("INDOORS_WEB", os.path.join(os.path.dirname(os.path.abspath(__file__)), "web"))
 TOKEN_FILE = os.path.expanduser("~/.indoors-token")
 
 
@@ -109,10 +114,31 @@ async def handler(ws):
         os.close(fd)
 
 
+class QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *args):
+        pass
+
+
+def serve_web():
+    """Serve o próprio Indoors (arquivos estáticos) para o navegador do celular."""
+    if not os.path.isdir(WEB_DIR):
+        print(f"[indoors-bridge] pasta web não encontrada: {WEB_DIR}", flush=True)
+        return False
+    handler_cls = functools.partial(QuietHandler, directory=WEB_DIR)
+    srv = http.server.ThreadingHTTPServer((HOST, WEB_PORT), handler_cls)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return True
+
+
 async def main():
+    web = serve_web()
     async with websockets.serve(handler, HOST, PORT):
-        print(f"[indoors-bridge] ouvindo em ws://{HOST}:{PORT}")
-        print(f"[indoors-bridge] token: {TOKEN}", flush=True)
+        print(f"[indoors-bridge] terminal em ws://{HOST}:{PORT}")
+        if web:
+            print("\n>>> Abra este link no navegador do celular:")
+            print(f"    http://127.0.0.1:{WEB_PORT}/#token={TOKEN}\n", flush=True)
+        else:
+            print(f"[indoors-bridge] token: {TOKEN}", flush=True)
         await asyncio.Future()
 
 
