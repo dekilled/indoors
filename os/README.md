@@ -70,6 +70,9 @@ sudo ./build-rootfs.sh oneplus-fajita
 ssh alarm@172.16.42.1                           # senha alarm; troque as senhas de alarm e root
 ```
 
+No Indoors OS o pacman atende também por **`henchman`** (`sudo henchman -Syu`). É só um apelido:
+o `pacman` de verdade continua no lugar, porque o makepkg, o yay e o paru chamam ele pelo nome.
+
 Para voltar ao Android: reinstale o OxygenOS pelo MSM Download Tool ou grave as imagens do `backup/`.
 
 ## Avisos

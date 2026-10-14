@@ -42,6 +42,8 @@ pacman -Syu --noconfirm --needed \
     base-devel git sudo openssh networkmanager modemmanager bluez bluez-utils \
     flatpak pipewire wireplumber linux-firmware
 systemctl enable sshd NetworkManager
+# henchman: o pau-mandado oficial. É só um apelido; o pacman continua lá pro makepkg e pros helpers do AUR
+ln -sf /usr/bin/pacman /usr/local/bin/henchman
 echo indoors > /etc/hostname
 echo 'LABEL=indoors-root / ext4 defaults,noatime 0 1' > /etc/fstab
 echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/wheel
