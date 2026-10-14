@@ -3,7 +3,7 @@
 # Uso (root): ./build-rootfs.sh oneplus-fajita
 # Precisa rodar binários aarch64: host ARM64 ou qemu-user-static com binfmt registrado.
 . "$(dirname "$0")/common.sh"
-need curl bsdtar md5sum mkfs.ext4 chroot mount
+need curl bsdtar md5sum mkfs.ext4 chroot mount mountpoint
 [ "$(id -u)" = 0 ] || die "rode como root (precisa de chroot e de preservar donos dos arquivos)"
 [ -d "$OUT/modules" ] || die "rode build-kernel.sh $DEVICE primeiro"
 [ "$(uname -m)" = aarch64 ] || [ -e /proc/sys/fs/binfmt_misc/qemu-aarch64 ] ||
@@ -15,16 +15,26 @@ md5=$(fetch "$ALARM.md5" ArchLinuxARM-aarch64-latest.tar.gz.md5)
 (cd "$CACHE" && md5sum -c "$md5") || die "md5 do Arch Linux ARM não confere (apague $CACHE e baixe de novo)"
 
 ROOT="$OUT/rootfs"
-umount -R "$ROOT" 2>/dev/null || true
+cleanup() {
+    for m in "$ROOT/dev" "$ROOT/sys" "$ROOT/proc" "$ROOT"; do
+        ! mountpoint -q "$m" || umount -R "$m" || umount -R -l "$m"
+    done
+}
+cleanup
+# nunca apagar com /dev ou /sys do host montados aqui dentro
+! grep -q " $ROOT[ /]" /proc/mounts || die "ainda há montagens em $ROOT; desmonte antes"
 rm -rf "$ROOT"
 mkdir -p "$ROOT"
 bsdtar -xpf "$tarball" -C "$ROOT"
 
-cleanup() { umount -R "$ROOT/proc" "$ROOT/sys" "$ROOT/dev" 2>/dev/null || true; }
 trap cleanup EXIT
+# como o arch-chroot: a raiz precisa ser ponto de montagem (o pacman checa espaço livre por ela)
+mount --bind "$ROOT" "$ROOT"
 mount -t proc proc "$ROOT/proc"
 mount --rbind /sys "$ROOT/sys"
+mount --make-rslave "$ROOT/sys"
 mount --rbind /dev "$ROOT/dev"
+mount --make-rslave "$ROOT/dev"
 rm -f "$ROOT/etc/resolv.conf"
 cp -L /etc/resolv.conf "$ROOT/etc/resolv.conf"
 
@@ -37,10 +47,15 @@ bsdtar -xf "$fwtar" -C "$ROOT/usr/lib" --strip-components 2 '*/lib/firmware'
 chroot "$ROOT" /bin/bash -eu <<'CHROOT'
 pacman-key --init
 pacman-key --populate archlinuxarm
-pacman -Rdd --noconfirm linux-aarch64 || true
-pacman -Syu --noconfirm --needed \
+# o sandbox do pacman 7 (Landlock + usuário alpm) não funciona sob qemu-user; só no build
+P="pacman --disable-sandbox"
+$P -Rdd --noconfirm linux-aarch64 linux-firmware || true
+$P -Syu --noconfirm --needed \
     base-devel git sudo openssh networkmanager modemmanager bluez bluez-utils \
-    flatpak pipewire wireplumber linux-firmware
+    flatpak pipewire wireplumber linux-firmware-qcom linux-firmware-atheros
+# sobras do kernel genérico e firmwares de PC (AMD, NVIDIA, Intel...)
+orphans=$(pacman -Qdtq || true)
+[ -z "$orphans" ] || $P -Rns --noconfirm $orphans
 systemctl enable sshd NetworkManager
 # henchman: o pau-mandado oficial. É só um apelido; o pacman continua lá pro makepkg e pros helpers do AUR
 ln -sf /usr/bin/pacman /usr/local/bin/henchman
@@ -60,7 +75,7 @@ address1=172.16.42.1/24
 method=ignore
 NM
 chmod 600 /etc/NetworkManager/system-connections/usb0.nmconnection
-pacman -Scc --noconfirm
+$P -Scc --noconfirm
 CHROOT
 
 cleanup

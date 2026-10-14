@@ -3,16 +3,17 @@
 A ideia é um Linux nativo (sem chroot dentro do Android) que roda pacman, AUR, Flatpak e APK.
 O que for fechado a gente reaproveita do Android ou contorna com driver mínimo.
 
-> Status: **nada testado em hardware ainda.** No PC já funciona: os kernels do 6T (7.1-rc1 sdm845) e do
-> Z5 Pro GT (4.14 do Lineage) compilam, e os boot.img saem com o header certo (v0 e v1). No QEMU, o initramfs acha o rootfs pelo label e faz `switch_root`
-> (ou cai no modo debug). `build-rootfs.sh` ainda não foi rodado: precisa de host com binfmt aarch64.
+> Status: **nada testado em hardware ainda.** No PC, o OnePlus 6T já passa pela cadeia inteira: o kernel
+> (7.1-rc1 sdm845) compila, o rootfs Arch Linux ARM é gerado, e no QEMU o initramfs acha o rootfs e
+> entrega pro systemd 262, que sobe até o `graphical.target` com SSH e NetworkManager e zero falhas.
+> O Z5 Pro GT está pausado (o kernel compila e o boot.img sai com header v1).
 
 ## Aparelhos
 
 | Aparelho | SoC | Caminho | Papel |
 |---|---|---|---|
 | OnePlus 6T (`oneplus-fajita`) | SDM845 | mainline | laboratório: tudo é desenvolvido aqui primeiro |
-| Lenovo Z5 Pro GT (`lenovo-z5progt`) | SM8150 | downstream 4.14, depois mainline | alvo principal: nunca bootou Linux |
+| Lenovo Z5 Pro GT (`lenovo-z5progt`) | SM8150 | downstream 4.14, depois mainline | **pausado**: flat da bateria quebrado |
 | Galaxy Z Flip3 | SM8350 | a decidir | prova de que a base é portável |
 | Note10+ / Note20 Ultra | Exynos | — | banco de reserva |
 
@@ -40,8 +41,8 @@ Assim dá para diagnosticar sem tela.
 1. **Primeiro boot no 6T sem gravar nada**: kernel + initramfs via `fastboot boot`, shell pela USB.
 2. **Arch instalado no 6T**: rootfs na userdata, SSH, NetworkManager, Flatpak.
 3. **Celular de verdade**: Phosh ou Plasma Mobile, modem (rmtfs/pd-mapper/tqftpserv/qrtr), Wi-Fi, áudio, Waydroid, BlackArch.
-4. **Z5 Pro GT, primeiro boot**: kernel 4.14 do LineageOS + nosso initramfs, shell pela USB (veja abaixo).
-5. **Z5 Pro GT com Arch completo**: kernel mainline SM8150 com device tree próprio do `heart`.
+4. *(pausado)* **Z5 Pro GT, primeiro boot**: kernel 4.14 do LineageOS + nosso initramfs, shell pela USB (veja abaixo).
+5. *(pausado)* **Z5 Pro GT com Arch completo**: kernel mainline SM8150 com device tree próprio do `heart`.
 6. **Z Flip3.**
 
 ## Usando (OnePlus 6T)
@@ -57,6 +58,7 @@ cd os/scripts
 ./build-boot.sh oneplus-fajita indoors.debug    # debug: para no shell, não procura rootfs
 
 ./test-qemu.sh oneplus-fajita                   # opcional: testa o initramfs no QEMU antes
+./test-qemu.sh oneplus-fajita ../out/oneplus-fajita/rootfs.img   # ou o Arch inteiro (não grava nada)
 
 # celular em modo fastboot (desligado, Volume+ + Power)
 ./flash.sh oneplus-fajita test                  # boot só na RAM; reiniciou, voltou ao Android
@@ -77,7 +79,10 @@ o `pacman` de verdade continua no lugar, porque o makepkg, o yay e o paru chamam
 
 Para voltar ao Android: reinstale o OxygenOS pelo MSM Download Tool ou grave as imagens do `backup/`.
 
-## Lenovo Z5 Pro GT (`heart`)
+## Lenovo Z5 Pro GT (`heart`) (pausado)
+
+Parado até trocar o flat da bateria (a bateria do Z5 Pro comum não serve). Os scripts já compilam o kernel
+e geram o boot.img, então dá pra retomar de onde parou.
 
 O aparelho é oficial no LineageOS ([device](https://github.com/LineageOS/android_device_lenovo_heart),
 [sm8150-common](https://github.com/LineageOS/android_device_lenovo_sm8150-common)). O kernel é o do
