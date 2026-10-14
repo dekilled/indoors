@@ -1,0 +1,59 @@
+#!/bin/sh
+# init do Indoors OS: carrega módulos, sobe rede USB e entrega o controle ao Arch.
+# Sem root encontrado (ou com indoors.debug na cmdline): shell por telnet em 172.16.42.1
+export PATH=/bin:/sbin
+
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+mount -t configfs configfs /sys/kernel/config 2>/dev/null
+mkdir -p /dev/pts && mount -t devpts devpts /dev/pts
+
+log() { echo "indoors: $*" | tee /dev/kmsg; }
+
+for m in $(cat /etc/modules); do modprobe -q "$m"; done
+
+usb_network() {
+    g=/sys/kernel/config/usb_gadget/indoors
+    [ -d $g ] && return
+    mkdir -p $g/strings/0x409 $g/configs/c.1/strings/0x409 $g/functions/ncm.usb0 || return
+    echo 0x18D1 > $g/idVendor
+    echo 0xD001 > $g/idProduct
+    echo Indoors > $g/strings/0x409/manufacturer
+    echo "Indoors OS" > $g/strings/0x409/product
+    echo NCM > $g/configs/c.1/strings/0x409/configuration
+    ln -s $g/functions/ncm.usb0 $g/configs/c.1/
+    # o controlador USB pode demorar a aparecer
+    for i in $(seq 50); do udc=$(ls /sys/class/udc 2>/dev/null | head -n1); [ -n "$udc" ] && break; sleep 0.1; done
+    [ -n "$udc" ] || { log "sem controlador USB (udc)"; return; }
+    echo "$udc" > $g/UDC
+    ifconfig usb0 172.16.42.1 netmask 255.255.255.0 up
+    udhcpd /etc/udhcpd.conf
+    log "rede USB: ssh/telnet em 172.16.42.1"
+}
+
+root=; debug=
+for arg in $(cat /proc/cmdline); do
+    case $arg in
+        root=*) root=${arg#root=} ;;
+        indoors.debug) debug=1 ;;
+    esac
+done
+root=${root:-LABEL=indoors-root}
+
+usb_network
+
+dev=
+[ -z "$debug" ] && for i in $(seq 100); do dev=$(findfs "$root" 2>/dev/null) && break; sleep 0.1; done
+
+if [ -z "$debug" ] && [ -n "$dev" ] && mount -o rw "$dev" /sysroot && [ -x /sysroot/sbin/init ]; then
+    log "root $root -> $dev, iniciando o Arch"
+    mount --move /dev /sysroot/dev
+    umount /sys/kernel/config /proc /sys 2>/dev/null
+    exec switch_root /sysroot /sbin/init
+fi
+
+log "modo debug (root=$root, achou='$dev'). telnet 172.16.42.1"
+telnetd -l /bin/sh
+echo "Indoors debug shell. Rede: telnet 172.16.42.1" > /dev/tty0
+while true; do sleep 3600; done
