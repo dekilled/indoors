@@ -48,7 +48,7 @@ cp "$KMOD"/modules.builtin "$KMOD"/modules.order "$IRD/lib/modules/$KREL/" 2>/de
 echo "$INITFS_MODULES" | tr ' ' '\n' | grep . > "$IRD/etc/modules" || true
 
 # firmware da GPU: blobs do aparelho, e o resto do linux-firmware
-fwtar=$(fetch "$FIRMWARE_URL" "firmware-$DEVICE.tar.gz")
+[ -n "$INITFS_FIRMWARE" ] && fwtar=$(fetch "$FIRMWARE_URL" "firmware-$DEVICE.tar.gz")
 for fw in $INITFS_FIRMWARE; do
     mkdir -p "$IRD/lib/firmware/$(dirname "$fw")"
     tar -xzf "$fwtar" -O --wildcards "*/lib/firmware/$fw" > "$IRD/lib/firmware/$fw" 2>/dev/null ||

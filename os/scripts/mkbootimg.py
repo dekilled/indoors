@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Gera boot.img Android header v0 (sem depender do mkbootimg da AOSP)."""
+"""Gera boot.img Android header v0/v1 (sem depender do mkbootimg da AOSP)."""
 import argparse, hashlib, struct
 
 p = argparse.ArgumentParser()
 for a in ("kernel", "ramdisk", "output", "cmdline"):
     p.add_argument("--" + a, required=a != "cmdline", default="")
 p.add_argument("--pagesize", type=lambda x: int(x, 0), default=4096)
+p.add_argument("--header_version", type=int, choices=(0, 1), default=0)
 for a, d in (("base", 0x10000000), ("kernel_offset", 0x8000), ("ramdisk_offset", 0x1000000),
              ("second_offset", 0xF00000), ("tags_offset", 0x100)):
     p.add_argument("--" + a, type=lambda x: int(x, 0), default=d)
@@ -28,8 +29,11 @@ header = struct.pack(
     len(ramdisk), a.base + a.ramdisk_offset,
     0, a.base + a.second_offset,
     a.base + a.tags_offset, a.pagesize,
-    0, 0,  # header_version, os_version
+    a.header_version, 0,  # os_version
     b"indoors", cmd[:512], sha.digest(), cmd[512:])
+if a.header_version == 1:
+    # recovery_dtbo_size, recovery_dtbo_offset, header_size (sem recovery dtbo no boot)
+    header += struct.pack("<IQI", 0, 0, len(header) + 16)
 
 def pad(b):
     return b + b"\0" * (-len(b) % a.pagesize)

@@ -10,6 +10,7 @@ case $mode in
     test)
         fastboot boot "$OUT/boot.img" ;;
     install)
+        [ -n "${ROOTFS_PARTITION:-}" ] || die "$DEVICE_NAME ainda não tem instalação (só o modo test)"
         [ -f "$OUT/rootfs.img" ] || die "rode build-rootfs.sh $DEVICE primeiro"
         echo "Isto APAGA o Android e todos os dados de $DEVICE_NAME."
         echo "Fez o backup (scripts/backup.sh)? Digite APAGAR para continuar:"

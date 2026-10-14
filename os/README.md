@@ -3,8 +3,8 @@
 A ideia é um Linux nativo (sem chroot dentro do Android) que roda pacman, AUR, Flatpak e APK.
 O que for fechado a gente reaproveita do Android ou contorna com driver mínimo.
 
-> Status: **nada testado em hardware ainda.** No PC já funciona: o kernel do 6T (7.1-rc1 sdm845) compila
-> e o boot.img sai com o header certo. No QEMU, o initramfs acha o rootfs pelo label e faz `switch_root`
+> Status: **nada testado em hardware ainda.** No PC já funciona: os kernels do 6T (7.1-rc1 sdm845) e do
+> Z5 Pro GT (4.14 do Lineage) compilam, e os boot.img saem com o header certo (v0 e v1). No QEMU, o initramfs acha o rootfs pelo label e faz `switch_root`
 > (ou cai no modo debug). `build-rootfs.sh` ainda não foi rodado: precisa de host com binfmt aarch64.
 
 ## Aparelhos
@@ -12,12 +12,13 @@ O que for fechado a gente reaproveita do Android ou contorna com driver mínimo.
 | Aparelho | SoC | Caminho | Papel |
 |---|---|---|---|
 | OnePlus 6T (`oneplus-fajita`) | SDM845 | mainline | laboratório: tudo é desenvolvido aqui primeiro |
-| Lenovo Z5 Pro GT (`lenovo-z5progt`) | SM8150 | Halium (depois mainline) | alvo principal: nunca bootou Linux |
+| Lenovo Z5 Pro GT (`lenovo-z5progt`) | SM8150 | downstream 4.14, depois mainline | alvo principal: nunca bootou Linux |
 | Galaxy Z Flip3 | SM8350 | a decidir | prova de que a base é portável |
 | Note10+ / Note20 Ultra | Exynos | — | banco de reserva |
 
 **mainline**: kernel oficial com patches do [sdm845-mainline](https://gitlab.com/sdm845-mainline/linux). Os drivers são livres; só firmware é blob.
-**Halium**: kernel do LineageOS + [libhybris](https://github.com/libhybris/libhybris), que carrega os drivers `.so` do Android dentro do Linux.
+**downstream**: kernel do LineageOS (Qualcomm 4.14). Tem todos os drivers, mas é velho demais pro systemd atual.
+**Halium/libhybris**: carrega os drivers `.so` do Android dentro do Linux. Fica de plano B pra câmera.
 
 ## Como as peças se encaixam
 
@@ -39,13 +40,14 @@ Assim dá para diagnosticar sem tela.
 1. **Primeiro boot no 6T sem gravar nada**: kernel + initramfs via `fastboot boot`, shell pela USB.
 2. **Arch instalado no 6T**: rootfs na userdata, SSH, NetworkManager, Flatpak.
 3. **Celular de verdade**: Phosh ou Plasma Mobile, modem (rmtfs/pd-mapper/tqftpserv/qrtr), Wi-Fi, áudio, Waydroid, BlackArch.
-4. **Z5 Pro GT via Halium**: precisa do kernel e do device tree do LineageOS dele.
-5. **Z Flip3.**
+4. **Z5 Pro GT, primeiro boot**: kernel 4.14 do LineageOS + nosso initramfs, shell pela USB (veja abaixo).
+5. **Z5 Pro GT com Arch completo**: kernel mainline SM8150 com device tree próprio do `heart`.
+6. **Z Flip3.**
 
 ## Usando (OnePlus 6T)
 
-Dependências no PC (Arch): `clang lld bison flex bc perl python kmod cpio xz zstd libarchive binutils android-tools e2fsprogs qemu-user-static qemu-user-static-binfmt qemu-system-aarch64`.
-No Debian/Ubuntu: `clang lld bison flex bc kmod zstd libssl-dev libelf-dev cpio xz-utils libarchive-tools binutils adb fastboot e2fsprogs qemu-user-static qemu-system-arm`.
+Dependências no PC (Arch): `git dtc clang lld bison flex bc perl python kmod cpio xz zstd libarchive binutils android-tools e2fsprogs qemu-user-static qemu-user-static-binfmt qemu-system-aarch64`.
+No Debian/Ubuntu: `git device-tree-compiler clang lld bison flex bc kmod zstd libssl-dev libelf-dev cpio xz-utils libarchive-tools binutils adb fastboot e2fsprogs qemu-user-static qemu-system-arm`.
 
 ```sh
 cd os/scripts
@@ -74,6 +76,28 @@ No Indoors OS o pacman atende também por **`henchman`** (`sudo henchman -Syu`).
 o `pacman` de verdade continua no lugar, porque o makepkg, o yay e o paru chamam ele pelo nome.
 
 Para voltar ao Android: reinstale o OxygenOS pelo MSM Download Tool ou grave as imagens do `backup/`.
+
+## Lenovo Z5 Pro GT (`heart`)
+
+O aparelho é oficial no LineageOS ([device](https://github.com/LineageOS/android_device_lenovo_heart),
+[sm8150-common](https://github.com/LineageOS/android_device_lenovo_sm8150-common)). O kernel é o do
+[Lucchetto](https://github.com/Lucchetto/android_kernel_lenovo_sm8150), Linux **4.14** downstream.
+
+O **systemd atual exige kernel 5.10 ou mais novo**, e o Arch usa systemd. Então o kernel do Lineage serve pro
+primeiro boot: nosso initramfs com shell pela USB, pra estudar o hardware (dmesg, painel, touch, slider)
+sem gravar nada. O Arch completo no `heart` vai precisar de kernel mainline
+([SM8150 do postmarketOS](https://gitlab.postmarketos.org/soc/qualcomm-sm8150/linux), que já tem suporte em testes pro OnePlus 7 Pro e pro Poco X3 Pro)
+com um device tree escrito pro aparelho. Esse é o trabalho de hacker de verdade.
+
+```sh
+./build-kernel.sh lenovo-z5progt              # config do Lineage + devices/lenovo-z5progt/indoors.config
+./build-initramfs.sh lenovo-z5progt
+./build-boot.sh lenovo-z5progt indoors.debug
+./flash.sh lenovo-z5progt test                # fastboot boot: nada é gravado
+telnet 172.16.42.1
+```
+
+O aparelho é não-A/B. A partição recovery (TWRP/SHRP) não é tocada, então continua sendo a rede de segurança.
 
 ## Avisos
 

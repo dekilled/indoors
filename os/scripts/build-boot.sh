@@ -5,9 +5,8 @@
 need python3
 [ -f "$OUT/initramfs.cpio.gz" ] || die "rode build-initramfs.sh $DEVICE primeiro"
 shift
-cat "$OUT/Image.gz" "$OUT/device.dtb" > "$OUT/Image.gz-dtb"
-python3 "$OS_DIR/scripts/mkbootimg.py" \
-    --kernel "$OUT/Image.gz-dtb" --ramdisk "$OUT/initramfs.cpio.gz" \
+python3 "$OS_DIR/scripts/mkbootimg.py" --header_version "${BOOT_HEADER_VERSION:-0}" \
+    --kernel "$OUT/kernel" --ramdisk "$OUT/initramfs.cpio.gz" \
     --cmdline "$BOOT_CMDLINE root=LABEL=indoors-root $*" \
     --pagesize "$BOOT_PAGESIZE" --base "$BOOT_BASE" \
     --kernel_offset "$BOOT_KERNEL_OFFSET" --ramdisk_offset "$BOOT_RAMDISK_OFFSET" \
