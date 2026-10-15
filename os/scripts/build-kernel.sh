@@ -30,6 +30,8 @@ if [ -n "${KERNEL_DEFCONFIGS:-}" ]; then
     $KMAKE $KERNEL_DEFCONFIGS "indoors-$DEVICE.config"
 else
     cp "$(pmaports_file "$KERNEL_CONFIG")" "$SRC/.config"
+    # o nosso fragmento vem depois, então ganha do pmOS
+    [ -n "${KERNEL_FRAGMENT:-}" ] && cat "$OS_DIR/devices/$DEVICE/$KERNEL_FRAGMENT" >> "$SRC/.config"
     $KMAKE olddefconfig
 fi
 $KMAKE "$KERNEL_IMAGE" modules dtbs
