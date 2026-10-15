@@ -26,8 +26,8 @@ KBUILD=$SRC
 KMAKE="make -C $SRC O=$KBUILD ARCH=arm64 LLVM=1 -j$(nproc) ${KERNEL_MAKE_ARGS:-}"
 if [ -n "${KERNEL_DEFCONFIGS:-}" ]; then
     # fragmentos na ordem do BoardConfig do Lineage, depois o nosso
-    cp "$OS_DIR/devices/$DEVICE/$KERNEL_FRAGMENT" "$SRC/arch/arm64/configs/indoors-$DEVICE.config"
-    $KMAKE $KERNEL_DEFCONFIGS "indoors-$DEVICE.config"
+    cp "$OS_DIR/devices/$DEVICE/$KERNEL_FRAGMENT" "$SRC/arch/arm64/configs/lumna-$DEVICE.config"
+    $KMAKE $KERNEL_DEFCONFIGS "lumna-$DEVICE.config"
 else
     cp "$(pmaports_file "$KERNEL_CONFIG")" "$SRC/.config"
     # o nosso fragmento vem depois, então ganha do pmOS

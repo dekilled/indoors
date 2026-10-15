@@ -1,5 +1,5 @@
 #!/bin/sh
-# Monta o rootfs Arch Linux ARM e gera os/out/<aparelho>/rootfs.img (ext4, LABEL=indoors-root)
+# Monta o rootfs Arch Linux ARM e gera os/out/<aparelho>/rootfs.img (ext4, LABEL=lumna-root)
 # Uso (root): ./build-rootfs.sh oneplus-fajita
 # Precisa rodar binários aarch64: host ARM64 ou qemu-user-static com binfmt registrado.
 . "$(dirname "$0")/common.sh"
@@ -59,8 +59,8 @@ orphans=$(pacman -Qdtq || true)
 systemctl enable sshd NetworkManager
 # henchman: o pau-mandado oficial. É só um apelido; o pacman continua lá pro makepkg e pros helpers do AUR
 ln -sf /usr/bin/pacman /usr/local/bin/henchman
-echo indoors > /etc/hostname
-echo 'LABEL=indoors-root / ext4 defaults,noatime 0 1' > /etc/fstab
+echo lumna > /etc/hostname
+echo 'LABEL=lumna-root / ext4 defaults,noatime 0 1' > /etc/fstab
 echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/wheel
 # Rede USB fixa: o PC conversa com o celular em 172.16.42.1
 cat > /etc/NetworkManager/system-connections/usb0.nmconnection <<NM
@@ -84,5 +84,5 @@ rm -f "$ROOT/etc/resolv.conf"
 ln -s /run/systemd/resolve/stub-resolv.conf "$ROOT/etc/resolv.conf"
 
 rm -f "$OUT/rootfs.img"
-mkfs.ext4 -q -L indoors-root -b "$ROOTFS_BLOCKSIZE" -d "$ROOT" "$OUT/rootfs.img" "$ROOTFS_SIZE"
+mkfs.ext4 -q -L lumna-root -b "$ROOTFS_BLOCKSIZE" -d "$ROOT" "$OUT/rootfs.img" "$ROOTFS_SIZE"
 echo "ok: $OUT/rootfs.img  (login: alarm/alarm, root/root -> TROQUE as senhas)"

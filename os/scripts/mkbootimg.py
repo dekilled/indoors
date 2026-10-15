@@ -30,7 +30,7 @@ header = struct.pack(
     0, a.base + a.second_offset,
     a.base + a.tags_offset, a.pagesize,
     a.header_version, 0,  # os_version
-    b"indoors", cmd[:512], sha.digest(), cmd[512:])
+    b"lumna", cmd[:512], sha.digest(), cmd[512:])
 if a.header_version == 1:
     # recovery_dtbo_size, recovery_dtbo_offset, header_size (sem recovery dtbo no boot)
     header += struct.pack("<IQI", 0, 0, len(header) + 16)

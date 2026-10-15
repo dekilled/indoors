@@ -1,5 +1,5 @@
 #!/bin/sh
-# Monta o initramfs: busybox estático + módulos + firmware da GPU + init do Indoors
+# Monta o initramfs: busybox estático + módulos + firmware da GPU + init do LUMNA
 # Uso: ./build-initramfs.sh oneplus-fajita   (rode build-kernel.sh antes)
 . "$(dirname "$0")/common.sh"
 need curl tar ar xz zstd cpio gzip find awk sed

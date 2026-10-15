@@ -1,5 +1,5 @@
 #!/bin/sh
-# Coloca o Indoors OS no aparelho (em modo fastboot)
+# Coloca o LUMNA OS no aparelho (em modo fastboot)
 #   ./flash.sh oneplus-fajita test      boot.img vai só pra RAM, nada é gravado
 #   ./flash.sh oneplus-fajita install   grava boot e rootfs (APAGA O ANDROID)
 . "$(dirname "$0")/common.sh"

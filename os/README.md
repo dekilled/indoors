@@ -1,4 +1,4 @@
-# Indoors OS: Arch Linux de verdade no celular
+# LUMNA OS: Arch Linux de verdade no celular
 
 A ideia é um Linux nativo (sem chroot dentro do Android) que roda pacman, AUR, Flatpak e APK.
 O que for fechado a gente reaproveita do Android ou contorna com driver mínimo.
@@ -24,8 +24,8 @@ O que for fechado a gente reaproveita do Android ou contorna com driver mínimo.
 ## Como as peças se encaixam
 
 ```
-boot.img = Image.gz + dtb + initramfs (busybox + init do Indoors)
-   │  init: carrega módulos, sobe rede USB (172.16.42.1), procura LABEL=indoors-root
+boot.img = Image.gz + dtb + initramfs (busybox + init do LUMNA)
+   │  init: carrega módulos, sobe rede USB (172.16.42.1), procura LABEL=lumna-root
    ▼
 rootfs Arch Linux ARM (partição userdata)
    ├── pacman + AUR (base-devel, git)
@@ -33,7 +33,7 @@ rootfs Arch Linux ARM (partição userdata)
    └── Waydroid (APK)      ← etapa 3
 ```
 
-Sem rootfs (ou com `indoors.debug` na cmdline) o init vira um shell por telnet pela USB.
+Sem rootfs (ou com `lumna.debug` na cmdline) o init vira um shell por telnet pela USB.
 Assim dá para diagnosticar sem tela.
 
 ## Etapas
@@ -55,7 +55,7 @@ cd os/scripts
 ./backup.sh                                     # ANTES de tudo, com o Android ainda ligado e root
 ./build-kernel.sh oneplus-fajita                # ~30-60 min na primeira vez
 ./build-initramfs.sh oneplus-fajita
-./build-boot.sh oneplus-fajita indoors.debug    # debug: para no shell, não procura rootfs
+./build-boot.sh oneplus-fajita lumna.debug    # debug: para no shell, não procura rootfs
 
 ./test-qemu.sh oneplus-fajita                   # opcional: testa o initramfs no QEMU antes
 ./test-qemu.sh oneplus-fajita ../out/oneplus-fajita/rootfs.img   # ou o Arch inteiro (não grava nada)
@@ -74,7 +74,7 @@ sudo ./build-rootfs.sh oneplus-fajita
 ssh alarm@172.16.42.1                           # senha alarm; troque as senhas de alarm e root
 ```
 
-No Indoors OS o pacman atende também por **`henchman`** (`sudo henchman -Syu`). É só um apelido:
+No LUMNA OS o pacman atende também por **`henchman`** (`sudo henchman -Syu`). É só um apelido:
 o `pacman` de verdade continua no lugar, porque o makepkg, o yay e o paru chamam ele pelo nome.
 
 Para voltar ao Android: reinstale o OxygenOS pelo MSM Download Tool ou grave as imagens do `backup/`.
@@ -95,9 +95,9 @@ sem gravar nada. O Arch completo no `heart` vai precisar de kernel mainline
 com um device tree escrito pro aparelho. Esse é o trabalho de hacker de verdade.
 
 ```sh
-./build-kernel.sh lenovo-z5progt              # config do Lineage + devices/lenovo-z5progt/indoors.config
+./build-kernel.sh lenovo-z5progt              # config do Lineage + devices/lenovo-z5progt/lumna.config
 ./build-initramfs.sh lenovo-z5progt
-./build-boot.sh lenovo-z5progt indoors.debug
+./build-boot.sh lenovo-z5progt lumna.debug
 ./flash.sh lenovo-z5progt test                # fastboot boot: nada é gravado
 telnet 172.16.42.1
 ```
