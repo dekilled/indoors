@@ -5,3 +5,4 @@ ios
 /os/cache
 /os/out
 /os/backup
+__pycache__/
