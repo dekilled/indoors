@@ -53,23 +53,23 @@ Instale tudo de uma vez, conforme a sua distro:
 
 ```sh
 # Arch / Manjaro / EndeavourOS
-sudo pacman -S --needed base-devel git curl bc dtc clang lld bison flex perl python kmod openssl libelf \
+sudo pacman -S --needed base-devel git curl bc dtc clang llvm lld bison flex perl python kmod openssl libelf \
     cpio xz zstd libarchive binutils e2fsprogs android-tools \
     qemu-system-aarch64 qemu-user-static qemu-user-static-binfmt
 
 # Debian / Ubuntu / Mint / Pop!_OS
-sudo apt install build-essential git curl bc device-tree-compiler clang lld bison flex perl python3 kmod \
+sudo apt install build-essential git curl bc device-tree-compiler clang llvm lld bison flex perl python3 kmod \
     libssl-dev libelf-dev cpio xz-utils zstd libarchive-tools binutils e2fsprogs adb fastboot \
     qemu-system-arm qemu-user-static binfmt-support
 
 # Fedora
-sudo dnf install @development-tools git curl bc dtc clang lld bison flex perl python3 kmod \
+sudo dnf install @development-tools git curl bc dtc clang llvm lld bison flex perl python3 kmod \
     openssl-devel elfutils-libelf-devel cpio xz zstd bsdtar binutils e2fsprogs android-tools \
     qemu-system-aarch64 qemu-user-static
 ```
 
 Pra que serve cada grupo:
-- **Kernel:** `clang` + `lld` (o `ld.lld`), `bison`, `flex`, `bc`, `perl`, `dtc`, `openssl`/`libssl-dev` (assinatura dos módulos), `kmod` (o `depmod`).
+- **Kernel:** `clang` + `llvm` (o `llvm-objcopy`, `llvm-ar`...) + `lld` (o `ld.lld`), `bison`, `flex`, `bc`, `perl`, `dtc`, `openssl`/`libssl-dev` (assinatura dos módulos), `kmod` (o `depmod`).
 - **initramfs e rootfs:** `cpio`, `xz`, `zstd`, `bsdtar` (libarchive), `e2fsprogs` (o `mkfs.ext4`), `qemu-user-static` (roda o pacman ARM dentro do PC x86).
 - **Celular:** `fastboot` e `adb` (android-tools).
 - **Teste opcional:** `qemu-system-aarch64`.

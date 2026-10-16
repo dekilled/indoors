@@ -21,6 +21,7 @@ need() {
     for c in $falta; do
         case $c in
             ld.lld) p="lld" ;;
+            llvm-*) p="llvm" ;;
             depmod) p="kmod" ;;
             mkfs.ext4) p="e2fsprogs" ;;
             bsdtar) p="libarchive (Arch) / libarchive-tools (Debian/Ubuntu) / bsdtar (Fedora)" ;;

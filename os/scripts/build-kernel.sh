@@ -2,7 +2,7 @@
 # Compila kernel, dtb e módulos. Saída em os/out/<aparelho>/
 # Uso: ./build-kernel.sh oneplus-fajita
 . "$(dirname "$0")/common.sh"
-need curl tar git make clang ld.lld bison flex bc perl python3 zstd depmod
+need curl tar git make clang ld.lld llvm-ar llvm-nm llvm-objcopy llvm-objdump llvm-readelf llvm-strip bison flex bc perl python3 zstd depmod
 KERNEL_IMAGE=${KERNEL_IMAGE:-Image.gz}
 
 SRC="$CACHE/linux-$KERNEL_TAG"
