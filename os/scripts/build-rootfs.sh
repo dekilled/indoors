@@ -72,7 +72,11 @@ type=ethernet
 interface-name=usb0
 [ipv4]
 method=manual
-address1=172.16.42.1/24
+# o PC (172.16.42.2) repassa a internet com scripts/usb-internet.sh; métrica alta
+# pra o Wi-Fi ganhar quando estiver ligado
+address1=172.16.42.1/24,172.16.42.2
+dns=1.1.1.1;8.8.8.8;
+route-metric=700
 [ipv6]
 method=ignore
 NM

@@ -106,6 +106,7 @@ sudo ./build-rootfs.sh oneplus-fajita
 ./build-boot.sh oneplus-fajita
 ./flash.sh oneplus-fajita install
 ssh alarm@172.16.42.1                           # senha alarm; troque as senhas de alarm e root
+sudo ./usb-internet.sh                          # no PC: empresta a internet pro celular (pacman)
 ```
 
 No LUMNA OS o pacman atende também por **`henchman`** (`sudo henchman -Syu`). É só um apelido:
