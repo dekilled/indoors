@@ -90,6 +90,9 @@ cd os/scripts
 
 # celular em modo fastboot (desligado, Volume+ + Power)
 ./flash.sh oneplus-fajita test                  # boot só na RAM; reiniciou, voltou ao Android
+# se o bootloader recusar ("Load Error", comum no 6T): grava no slot que o Android não usa
+./flash.sh oneplus-fajita slot                  # Android e dados ficam intactos no outro slot
+./flash.sh oneplus-fajita voltar                # (no fastboot) liga de novo no slot do Android
 telnet 172.16.42.1                              # se o PC não pegar IP: 172.16.42.2/24 na interface USB
 ```
 
