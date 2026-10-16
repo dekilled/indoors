@@ -57,6 +57,8 @@ $P -Syu --noconfirm --needed \
 orphans=$(pacman -Qdtq || true)
 [ -z "$orphans" ] || $P -Rns --noconfirm $orphans
 systemctl enable sshd NetworkManager
+# o ALARM liga o systemd-networkd também; dois gerenciadores de rede brigam
+systemctl disable systemd-networkd systemd-networkd.socket systemd-networkd-wait-online
 # henchman: o pau-mandado oficial. É só um apelido; o pacman continua lá pro makepkg e pros helpers do AUR
 ln -sf /usr/bin/pacman /usr/local/bin/henchman
 echo lumna > /etc/hostname
