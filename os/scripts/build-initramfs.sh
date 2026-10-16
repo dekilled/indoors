@@ -2,7 +2,7 @@
 # Monta o initramfs: busybox estático + módulos + firmware da GPU + init do LUMNA
 # Uso: ./build-initramfs.sh oneplus-fajita   (rode build-kernel.sh antes)
 . "$(dirname "$0")/common.sh"
-need curl git tar ar xz zstd cpio gzip find awk sed
+need curl git clang ld.lld tar ar xz zstd cpio gzip find awk sed
 [ -f "$OUT/kernel.release" ] || die "rode build-kernel.sh $DEVICE primeiro"
 KREL=$(cat "$OUT/kernel.release")
 KMOD="$OUT/modules/lib/modules/$KREL"
@@ -60,6 +60,9 @@ for fw in $INITFS_FIRMWARE; do
         die "firmware $fw não encontrado"
 done
 
+# reboot com modo (lumna-reboot bootloader = fastboot), sem libc
+clang --target=aarch64-linux-gnu -Os -static -nostdlib -ffreestanding -fno-stack-protector \
+    -fuse-ld=lld -Wl,--build-id=none -s -o "$IRD/bin/lumna-reboot" "$OS_DIR/initramfs/lumna-reboot.c"
 install -m755 "$OS_DIR/initramfs/init" "$IRD/init"
 cp "$OS_DIR/initramfs/udhcpd.conf" "$IRD/etc/"
 (cd "$IRD" && find . | cpio -o -H newc --owner=0:0 --quiet | gzip -9) > "$OUT/initramfs.cpio.gz"

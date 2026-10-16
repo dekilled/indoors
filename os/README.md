@@ -93,6 +93,9 @@ cd os/scripts
 # se o bootloader recusar ("Load Error", comum no 6T): grava no slot que o Android não usa
 ./flash.sh oneplus-fajita slot                  # Android e dados ficam intactos no outro slot
 ./flash.sh oneplus-fajita voltar                # (no fastboot) liga de novo no slot do Android
+# pra voltar ao fastboot sem brigar com os botões:
+#   no shell de debug (telnet): lumna-reboot bootloader
+#   no Arch (ssh):              sudo systemctl reboot bootloader
 telnet 172.16.42.1                              # se o PC não pegar IP: 172.16.42.2/24 na interface USB
 ```
 

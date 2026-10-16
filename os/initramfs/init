@@ -57,5 +57,5 @@ fi
 
 log "modo debug (root=$root, achou='$dev'). telnet 172.16.42.1"
 telnetd -l /bin/sh
-echo "LUMNA debug shell. Rede: telnet 172.16.42.1" > /dev/tty0
+echo "LUMNA debug shell. Rede: telnet 172.16.42.1 (fastboot: lumna-reboot bootloader)" > /dev/tty0
 while true; do sleep 3600; done
