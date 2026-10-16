@@ -47,8 +47,36 @@ Assim dá para diagnosticar sem tela.
 
 ## Usando (OnePlus 6T)
 
-Dependências no PC (Arch): `git dtc clang lld bison flex bc perl python kmod cpio xz zstd libarchive binutils android-tools e2fsprogs qemu-user-static qemu-user-static-binfmt qemu-system-aarch64`.
-No Debian/Ubuntu: `git device-tree-compiler clang lld bison flex bc kmod zstd libssl-dev libelf-dev cpio xz-utils libarchive-tools binutils adb fastboot e2fsprogs qemu-user-static qemu-system-arm`.
+### Preparar o PC (uma vez só)
+
+Instale tudo de uma vez, conforme a sua distro:
+
+```sh
+# Arch / Manjaro / EndeavourOS
+sudo pacman -S --needed base-devel git curl bc dtc clang lld bison flex perl python kmod openssl libelf \
+    cpio xz zstd libarchive binutils e2fsprogs android-tools \
+    qemu-system-aarch64 qemu-user-static qemu-user-static-binfmt
+
+# Debian / Ubuntu / Mint / Pop!_OS
+sudo apt install build-essential git curl bc device-tree-compiler clang lld bison flex perl python3 kmod \
+    libssl-dev libelf-dev cpio xz-utils zstd libarchive-tools binutils e2fsprogs adb fastboot \
+    qemu-system-arm qemu-user-static binfmt-support
+
+# Fedora
+sudo dnf install @development-tools git curl bc dtc clang lld bison flex perl python3 kmod \
+    openssl-devel elfutils-libelf-devel cpio xz zstd bsdtar binutils e2fsprogs android-tools \
+    qemu-system-aarch64 qemu-user-static
+```
+
+Pra que serve cada grupo:
+- **Kernel:** `clang` + `lld` (o `ld.lld`), `bison`, `flex`, `bc`, `perl`, `dtc`, `openssl`/`libssl-dev` (assinatura dos módulos), `kmod` (o `depmod`).
+- **initramfs e rootfs:** `cpio`, `xz`, `zstd`, `bsdtar` (libarchive), `e2fsprogs` (o `mkfs.ext4`), `qemu-user-static` (roda o pacman ARM dentro do PC x86).
+- **Celular:** `fastboot` e `adb` (android-tools).
+- **Teste opcional:** `qemu-system-aarch64`.
+
+Se faltar alguma coisa, o script avisa todos os comandos que faltam de uma vez e o pacote de cada um.
+
+### Compilar e testar
 
 ```sh
 cd os/scripts

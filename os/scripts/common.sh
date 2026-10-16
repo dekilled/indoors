@@ -12,7 +12,31 @@ OUT="$OS_DIR/out/$DEVICE"
 mkdir -p "$CACHE" "$OUT"
 
 die() { echo "erro: $*" >&2; exit 1; }
-need() { for c in "$@"; do command -v "$c" >/dev/null || die "falta o comando '$c' (veja os/README.md)"; done; }
+# Confere tudo de uma vez e diz o pacote de cada comando que falta
+need() {
+    falta=
+    for c in "$@"; do command -v "$c" >/dev/null || falta="$falta $c"; done
+    [ -z "$falta" ] && return 0
+    echo "erro: faltam comandos no PC:" >&2
+    for c in $falta; do
+        case $c in
+            ld.lld) p="lld" ;;
+            depmod) p="kmod" ;;
+            mkfs.ext4) p="e2fsprogs" ;;
+            bsdtar) p="libarchive (Arch) / libarchive-tools (Debian/Ubuntu) / bsdtar (Fedora)" ;;
+            mountpoint|mount) p="util-linux" ;;
+            md5sum|chroot) p="coreutils" ;;
+            ar) p="binutils" ;;
+            python3) p="python (Arch) / python3 (Debian/Ubuntu/Fedora)" ;;
+            fastboot) p="android-tools (Arch/Fedora) / fastboot (Debian/Ubuntu)" ;;
+            qemu-system-aarch64) p="qemu-system-aarch64 (Arch/Fedora) / qemu-system-arm (Debian/Ubuntu)" ;;
+            *) p="$c" ;;
+        esac
+        echo "  $c  ->  pacote: $p" >&2
+    done
+    echo "lista completa em os/README.md, seção \"Preparar o PC\"" >&2
+    exit 1
+}
 
 # Baixa uma vez para o cache e devolve o caminho
 fetch() {
