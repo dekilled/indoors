@@ -1,5 +1,7 @@
 # LUMNA OS: Arch Linux de verdade no celular
 
+> **Mudou de casa:** a versão viva agora fica no [LUMNA_OS](https://github.com/dekilled/LUMNA_OS/tree/lumna-mobile/mobile), branch `lumna-mobile`, pasta `mobile/`.
+
 A ideia é um Linux nativo (sem chroot dentro do Android) que roda pacman, AUR, Flatpak e APK.
 O que for fechado a gente reaproveita do Android ou contorna com driver mínimo.
 
