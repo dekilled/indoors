@@ -40,7 +40,7 @@ cp -L /etc/resolv.conf "$ROOT/etc/resolv.conf"
 
 # Kernel e firmware nossos no lugar do kernel genérico do ALARM
 cp -a "$OUT"/modules/lib/modules/. "$ROOT/usr/lib/modules/"
-fwtar=$(fetch "$FIRMWARE_URL" "firmware-$DEVICE.tar.gz")
+fwtar=$(fetch_git "$FIRMWARE_URL" "firmware-$DEVICE.tar.gz" "$FIRMWARE_GIT" "$FIRMWARE_REF")
 mkdir -p "$ROOT/usr/lib/firmware"
 bsdtar -xf "$fwtar" -C "$ROOT/usr/lib" --strip-components 2 '*/lib/firmware'
 

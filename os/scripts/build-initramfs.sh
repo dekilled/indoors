@@ -2,7 +2,7 @@
 # Monta o initramfs: busybox estático + módulos + firmware da GPU + init do LUMNA
 # Uso: ./build-initramfs.sh oneplus-fajita   (rode build-kernel.sh antes)
 . "$(dirname "$0")/common.sh"
-need curl tar ar xz zstd cpio gzip find awk sed
+need curl git tar ar xz zstd cpio gzip find awk sed
 [ -f "$OUT/kernel.release" ] || die "rode build-kernel.sh $DEVICE primeiro"
 KREL=$(cat "$OUT/kernel.release")
 KMOD="$OUT/modules/lib/modules/$KREL"
@@ -48,7 +48,10 @@ cp "$KMOD"/modules.builtin "$KMOD"/modules.order "$IRD/lib/modules/$KREL/" 2>/de
 echo "$INITFS_MODULES" | tr ' ' '\n' | grep . > "$IRD/etc/modules" || true
 
 # firmware da GPU: blobs do aparelho, e o resto do linux-firmware
-[ -n "$INITFS_FIRMWARE" ] && fwtar=$(fetch "$FIRMWARE_URL" "firmware-$DEVICE.tar.gz")
+fwtar=
+if [ -n "$INITFS_FIRMWARE" ]; then
+    fwtar=$(fetch_git "$FIRMWARE_URL" "firmware-$DEVICE.tar.gz" "$FIRMWARE_GIT" "$FIRMWARE_REF")
+fi
 for fw in $INITFS_FIRMWARE; do
     mkdir -p "$IRD/lib/firmware/$(dirname "$fw")"
     tar -xzf "$fwtar" -O --wildcards "*/lib/firmware/$fw" > "$IRD/lib/firmware/$fw" 2>/dev/null ||

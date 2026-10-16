@@ -42,7 +42,25 @@ need() {
 # Baixa uma vez para o cache e devolve o caminho
 fetch() {
     f="$CACHE/$2"
-    [ -s "$f" ] || { curl -fL --retry 3 -o "$f.part" "$1" && mv "$f.part" "$f"; } >&2
+    [ -s "$f" ] || { curl -fL --retry 3 -o "$f.part" "$1" && mv "$f.part" "$f"; } >&2 ||
+        die "não consegui baixar $1"
+    echo "$f"
+}
+
+# Igual ao fetch, mas se o .tar.gz for recusado (o GitLab às vezes dá 403)
+# monta o mesmo tarball com git: fetch_git <url> <arquivo> <repo git> <commit/tag>
+fetch_git() {
+    f="$CACHE/$2"
+    if [ ! -s "$f" ]; then
+        { curl -fL --retry 3 -o "$f.part" "$1" && mv "$f.part" "$f"; } >&2 || {
+            echo "download recusado, tentando com git: $3" >&2
+            g="$CACHE/git-${2%.tar.gz}"
+            rm -rf "$g" && git init -q "$g" &&
+                git -C "$g" fetch -q --depth 1 "$3" "$4" &&
+                git -C "$g" archive --format=tar.gz --prefix="${2%.tar.gz}/" -o "$f.part" FETCH_HEAD &&
+                mv "$f.part" "$f" && rm -rf "$g" || die "não consegui baixar $3 ($4)"
+        }
+    fi
     echo "$f"
 }
 
