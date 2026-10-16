@@ -32,10 +32,12 @@ usb_network() {
     log "rede USB: ssh/telnet em 172.16.42.1"
 }
 
+# lumna.root e não root=: o bootloader da OnePlus acrescenta o próprio
+# root=PARTUUID=... (a partição system do Android) depois do nosso
 root=; debug=
 for arg in $(cat /proc/cmdline); do
     case $arg in
-        root=*) root=${arg#root=} ;;
+        lumna.root=*) root=${arg#lumna.root=} ;;
         lumna.debug) debug=1 ;;
     esac
 done

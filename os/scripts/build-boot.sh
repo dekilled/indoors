@@ -7,7 +7,7 @@ need python3
 shift
 python3 "$OS_DIR/scripts/mkbootimg.py" --header_version "${BOOT_HEADER_VERSION:-0}" \
     --kernel "$OUT/kernel" --ramdisk "$OUT/initramfs.cpio.gz" \
-    --cmdline "$BOOT_CMDLINE root=LABEL=lumna-root $*" \
+    --cmdline "$BOOT_CMDLINE lumna.root=LABEL=lumna-root $*" \
     --pagesize "$BOOT_PAGESIZE" --base "$BOOT_BASE" \
     --kernel_offset "$BOOT_KERNEL_OFFSET" --ramdisk_offset "$BOOT_RAMDISK_OFFSET" \
     --second_offset "$BOOT_SECOND_OFFSET" --tags_offset "$BOOT_TAGS_OFFSET" \
