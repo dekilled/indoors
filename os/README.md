@@ -3,9 +3,9 @@
 A ideia é um Linux nativo (sem chroot dentro do Android) que roda pacman, AUR, Flatpak e APK.
 O que for fechado a gente reaproveita do Android ou contorna com driver mínimo.
 
-> Status: **nada testado em hardware ainda.** No PC, o OnePlus 6T já passa pela cadeia inteira: o kernel
-> (7.1-rc1 sdm845) compila, o rootfs Arch Linux ARM é gerado, e no QEMU o initramfs acha o rootfs e
-> entrega pro systemd 262, que sobe até o `graphical.target` com SSH e NetworkManager e zero falhas.
+> Status: **o Arch roda no OnePlus 6T de verdade.** Kernel 7.1-rc1 sdm845, tela, GPU (Adreno 630,
+> `renderD128`), UFS, touch, vibração, botões e rede USB funcionando; systemd sobe e o SSH entra em
+> `alarm@lumna`. Falta: interface gráfica, bateria/carregador no rootfs (testar), Wi-Fi, modem, áudio.
 > O Z5 Pro GT está pausado (o kernel compila e o boot.img sai com header v1).
 
 ## Aparelhos
@@ -38,8 +38,8 @@ Assim dá para diagnosticar sem tela.
 
 ## Etapas
 
-1. **Primeiro boot no 6T sem gravar nada**: kernel + initramfs via `fastboot boot`, shell pela USB.
-2. **Arch instalado no 6T**: rootfs na userdata, SSH, NetworkManager, Flatpak.
+1. ✅ **Primeiro boot no 6T sem gravar nada**: kernel + initramfs via `fastboot boot`, shell pela USB.
+2. ✅ **Arch instalado no 6T**: rootfs na userdata, SSH, NetworkManager, Flatpak.
 3. **Celular de verdade**: Phosh ou Plasma Mobile, modem (rmtfs/pd-mapper/tqftpserv/qrtr), Wi-Fi, áudio, Waydroid, BlackArch.
 4. *(pausado)* **Z5 Pro GT, primeiro boot**: kernel 4.14 do LineageOS + nosso initramfs, shell pela USB (veja abaixo).
 5. *(pausado)* **Z5 Pro GT com Arch completo**: kernel mainline SM8150 com device tree próprio do `heart`.
