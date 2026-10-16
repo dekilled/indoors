@@ -34,6 +34,9 @@ else
     [ -n "${KERNEL_FRAGMENT:-}" ] && cat "$OS_DIR/devices/$DEVICE/$KERNEL_FRAGMENT" >> "$SRC/.config"
     $KMAKE olddefconfig
 fi
+# Um build antigo sem llvm-nm deixa este cabeçalho vazio, e o make não refaz sozinho
+off="$KBUILD/include/generated/vdso-offsets.h"
+[ -f "$off" ] && [ ! -s "$off" ] && rm -f "$off" "$KBUILD"/arch/arm64/kernel/vdso/vdso.so*
 $KMAKE "$KERNEL_IMAGE" modules dtbs
 
 rm -rf "$OUT/modules"
